@@ -11,7 +11,7 @@ import {
   Fingerprint,
   Github,
   Linkedin,
-  Key // 👈 Added Key icon
+  Key 
 } from 'lucide-react';
 
 // Components
@@ -19,7 +19,7 @@ import { Login } from './components/Login';
 import Dashboard from './components/Dashboard';
 import Scanner from './components/Scanner';
 import History from './components/History';
-import ApiKeys from './components/ApiKeys'; // 👈 Imported API Keys component
+import ApiKeys from './components/ApiKeys'; 
 
 function App() {
   const [user, setUser] = useState(null);
@@ -52,7 +52,7 @@ function App() {
       const token = await user.getIdToken();
 
       console.log("1. Sending payload to backend...", payload);
-      const response = await fetch('http://127.0.0.1:8000/api/v1/scan', {
+      fetch('https://cipher-sentinel.onrender.com/api/v1/scan'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         console.log(`3. Polling attempt ${attempts} for Task: ${taskId}`);
-        const pollResponse = await fetch(`http://127.0.0.1:8000/api/v1/scan/${taskId}`, {
+        const pollResponse = await fetch('https://cipher-sentinel.onrender.com/api/v1/scan${taskId}`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         });
