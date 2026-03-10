@@ -1,57 +1,61 @@
+
 # CipherSentinel 🛡️
 
-> **Dual-engine security analysis for the post-quantum era.** Scan source code for deprecated cryptography and inspect live payloads for web attacks — all from a single SOC-grade dashboard.
+> **Enterprise-grade Post-Quantum Cryptography (PQC) DevSecOps Pipeline.** Decentralized local scanning meets asynchronous AI threat analysis.
 
 ---
 
 ## What Is CipherSentinel?
 
-CipherSentinel helps engineering teams answer two critical questions:
+CipherSentinel is an automated, AI-driven security analysis tool designed to bridge the gap between legacy cryptographic standards (RSA, ECC) and the impending threat of quantum computing. 
 
-1. **"Is our codebase ready for post-quantum cryptography?"** — Upload a `.zip` of your source code and get a detailed PQC readiness report with migration paths mapped directly to NIST standards.
-2. **"Is this payload malicious?"** — Submit any text payload to the WAF API and get an instant verdict on XSS, SQL injection, and directory traversal — including Base64-obfuscated variants.
+Instead of forcing developers to upload sensitive source code to a centralized server, CipherSentinel utilizes a lightweight, zero-trust local CLI agent. This agent parses Abstract Syntax Trees (ASTs) directly on the developer's machine to find vulnerable cryptographic implementations, and securely transmits only the necessary telemetry to our central AI engine to generate FIPS-203 compliant migration plans.
 
 ---
 
 ## Features
 
-### Static Application Security Testing (SAST)
+### 🔒 Zero-Trust Local CLI Agent
+Developers can install the `cipher_cli.py` tool locally or integrate it directly into their CI/CD pipelines (like GitHub Actions). It finds vulnerabilities at the source and communicates securely with the Core Engine using long-lived API keys, ensuring proprietary code never leaves the local environment.
 
-CipherSentinel scans `.zip` archives of Java, Python, and JavaScript/TypeScript projects using custom Semgrep rulesets. It flags deprecated algorithms (MD5, SHA-1, RSA) and maps each finding to a concrete NIST PQC migration recommendation — for example, replacing RSA with ML-KEM (Kyber). Every scan produces a PQC readiness score alongside prioritized, actionable remediation steps.
+### 🧠 Asynchronous AI Remediation Engine
+CipherSentinel doesn't just flag deprecated algorithms; it tells you how to fix them. Using a concurrent LLM-powered engine (via Groq), it generates exact code replacements and architectural warnings. To handle high-volume enterprise traffic without blocking the main event loop, all AI analysis is offloaded to a **Celery** task queue backed by **Redis**.
 
-### Web Application Firewall (WAF) API
+### 🛂 Dual-Auth API Gateway
+A true SOC tool separates human operators from machine agents:
+* **Humans (CISOs/Analysts):** Log into the Fleet Command Dashboard using secure Google Firebase JWTs.
+* **Machines (CLI/Pipelines):** Authenticate using locally generated, database-backed API Keys (`cs_live_...`).
 
-A lightweight REST API that inspects JSON payloads for XSS, SQL injection, and directory traversal signatures. CipherSentinel automatically attempts Base64 decoding before signature matching, catching obfuscated attack patterns that bypass naive filters. All scanned payloads and detections are persisted to an audit log for later review.
-
-### SOC Dashboard
-
-A dark-mode React interface with a drag-and-drop upload zone, real-time PQC readiness scoring, and threat-level metrics. Built for security analysts who need signal without noise.
-
-### API Hardening
-
-All endpoints require an `X-API-Key` header and are rate-limited via Flask-Limiter to resist brute-force and DDoS attempts.
+### 📊 Fleet Command Dashboard
+A dark-mode React interface featuring real-time PQC readiness scoring, a Time Machine Archive for historical audit logs, interactive threat metrics, and one-click PDF Executive Report generation.
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────┐
-│         React Frontend              │
-│  TypeScript · Vite · Chakra UI v2  │
-│  Lucide Icons · React-Dropzone     │
-└──────────────────┬──────────────────┘
-                   │ REST / JSON
-┌──────────────────▼──────────────────┐
-│           Flask Backend             │
-│  Flask-CORS · Flask-Limiter        │
-│  Werkzeug · SQLite3                │
-└──────────────────┬──────────────────┘
-                   │ subprocess
-┌──────────────────▼──────────────────┐
-│         Analysis Engine             │
-│  Semgrep CLI · Custom PQC Rulesets │
-└─────────────────────────────────────┘
+
+
+```text
+┌───────────────────────────────────────┐
+│        Local Agent / CI Pipeline      │
+│  Python CLI · Local AST · API Tokens  │
+└───────────────────┬───────────────────┘
+                    │ REST / JSON (Metadata Only)
+┌───────────────────▼───────────────────┐
+│           FastAPI Gateway             │
+│  Dual-Auth Bouncer · SQLite (Keys)    │
+└───────────────────┬───────────────────┘
+                    │ Task Delegation
+┌───────────────────▼───────────────────┐
+│         Celery Worker Queue           │
+│    Redis Broker · Groq LLM Engine     │
+└───────────────────┬───────────────────┘
+                    │ HTTP Polling      
+┌───────────────────▼───────────────────┐
+│      Fleet Command Dashboard          │
+│ React · Framer Motion · Firebase Auth │
+└───────────────────────────────────────┘
+
 ```
 
 ---
@@ -60,23 +64,29 @@ All endpoints require an `X-API-Key` header and are rate-limited via Flask-Limit
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+ and npm
-- Semgrep (`pip install semgrep`)
+* Python 3.10+
+* Node.js 18+
+* Redis Server (running on `localhost:6379`)
 
-### 1. Start the Backend
+### 1. Boot the Core Engine & Message Broker
+
+Start your local Redis server. Then, initialize the FastAPI backend and Celery workers:
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate       # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
-python app.py
+
+# Terminal A: Start the API Gateway
+uvicorn api.main:app --reload
+
+# Terminal B: Start the Asynchronous Workers
+celery -A worker.celery_app worker --loglevel=info
+
 ```
 
-The API will be available at `http://localhost:5000`.
-
-### 2. Start the Frontend
+### 2. Launch the Fleet Command (Frontend)
 
 In a new terminal:
 
@@ -84,100 +94,57 @@ In a new terminal:
 cd frontend
 npm install
 npm run dev
+
 ```
 
-Open `http://localhost:5173` in your browser.
+Access the dashboard at `http://localhost:5173`.
+
+### 3. Run a Zero-Trust CLI Scan
+
+Log into the web dashboard and generate an API Key from the "API KEYS" tab. Then, run the terminal agent:
+
+```bash
+cd backend
+python cipher_cli.py path/to/your/code.java --token "cs_live_YOUR_GENERATED_KEY"
+
+```
 
 ---
 
 ## API Reference
 
-### `POST /api/v1/sast-scan` — Static Code Analysis
+### `POST /api/v1/keys/generate` — Provision Machine Token
 
-Uploads a `.zip` archive for PQC vulnerability scanning.
+Generates a long-lived API key for CI/CD integration.
 
-| | |
-|---|---|
-| **Auth** | `X-API-Key: <your-key>` |
-| **Body** | `multipart/form-data` · key: `file` |
-| **Rate limit** | 10 requests / hour |
+* **Auth:** Requires a valid human Firebase JWT.
 
-**Example**
+### `POST /api/v1/scan` — Submit Telemetry
 
-```bash
-curl -X POST http://localhost:5000/api/v1/sast-scan \
-  -H "X-API-Key: your-key-here" \
-  -F "file=@project.zip"
-```
+Accepts vulnerability metadata from the local CLI and dispatches an asynchronous Celery task.
 
-**Response**
+* **Auth:** `Bearer cs_live_<key>` OR `Bearer <firebase_jwt>`
 
-```json
-{
-  "pqc_score": 42,
-  "findings": [
-    {
-      "rule": "deprecated-rsa",
-      "file": "src/auth/KeyManager.java",
-      "line": 38,
-      "severity": "HIGH",
-      "remediation": "Migrate to ML-KEM (FIPS 203)"
-    }
-  ]
-}
-```
+### `GET /api/v1/scan/{task_id}` — Poll Engine Status
 
----
+Retrieves the real-time status of the LLM analysis queue (PENDING, SUCCESS, FAILED).
 
-### `POST /api/v1/scan` — WAF Payload Inspection
+### `GET /api/v1/history` — Fetch Audit Trail
 
-Inspects a text payload for malicious patterns.
-
-| | |
-|---|---|
-| **Auth** | `X-API-Key: <your-key>` |
-| **Content-Type** | `application/json` |
-| **Rate limit** | 5 requests / minute |
-
-**Example**
-
-```bash
-curl -X POST http://localhost:5000/api/v1/scan \
-  -H "X-API-Key: your-key-here" \
-  -H "Content-Type: application/json" \
-  -d '{"payload": "<script>alert(1)</script>"}'
-```
-
-**Response**
-
-```json
-{
-  "threat_detected": true,
-  "type": "XSS",
-  "confidence": "HIGH",
-  "decoded_payload": null
-}
-```
-
----
-
-## Threat Coverage
-
-| Attack Type | Direct | Base64-Obfuscated |
-|---|:---:|:---:|
-| Cross-Site Scripting (XSS) | ✅ | ✅ |
-| SQL Injection | ✅ | ✅ |
-| Directory Traversal | ✅ | ✅ |
-| Deprecated Cryptography (MD5, SHA-1, RSA) | ✅ | — |
+Returns the encrypted session's complete historical scan log for the Archive tab.
 
 ---
 
 ## Contributing
 
-Pull requests are welcome. For significant changes, open an issue first to discuss your proposal. Please ensure all API changes are reflected in this README.
+Pull requests are welcome. For significant changes, open an issue first to discuss your proposal. Ensure all new API routes or architectural shifts are reflected in this README.
 
 ---
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://www.google.com/search?q=LICENSE)
+
+*Built by Aditya J Shettigar.*
+
+```
