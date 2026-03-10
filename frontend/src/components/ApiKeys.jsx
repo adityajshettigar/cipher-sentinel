@@ -16,7 +16,7 @@ const ApiKeys = () => {
     setLoading(true);
     try {
       const token = await auth.currentUser.getIdToken();
-      const response = await fetch('http://127.0.0.1:8000/api/v1/keys/generate', {
+     const response = await fetch('https://cipher-sentinel.onrender.com/api/v1/keys/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
