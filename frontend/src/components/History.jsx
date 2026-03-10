@@ -14,7 +14,7 @@ const History = () => {
     const fetchHistory = async () => {
       try {
         const token = await auth.currentUser.getIdToken();
-        const response = await fetch('https://cipher-sentinel.onrender.com/api/v1/history')', {
+const response = await fetch('https://cipher-sentinel.onrender.com/api/v1/history', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
