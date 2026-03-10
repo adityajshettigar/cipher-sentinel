@@ -1,0 +1,39 @@
+rules:
+  # --- PYTHON RULES ---
+  - id: weak-crypto-python-md5
+    patterns:
+      - pattern: hashlib.md5(...)
+    message: "NIST PQC Migration: MD5 is vulnerable to collision attacks and is not quantum-resistant. Migrate to SHA-256 or SHA-3."
+    languages: [python]
+    severity: WARNING
+
+  # --- JAVA & SPRING SECURITY RULES ---
+  - id: weak-crypto-java-md5
+    patterns:
+      - pattern: MessageDigest.getInstance("MD5")
+    message: "NIST PQC Migration: MD5 detected in Java MessageDigest. Migrate to a quantum-resistant hashing algorithm."
+    languages: [java]
+    severity: WARNING
+    
+  - id: vulnerable-rsa-java
+    patterns:
+      - pattern: KeyPairGenerator.getInstance("RSA")
+    message: "NIST PQC Migration: RSA will be broken by Shor's algorithm. Plan migration to ML-KEM (Kyber) for key encapsulation."
+    languages: [java]
+    severity: ERROR
+
+  - id: spring-security-weak-password-encoder
+    patterns:
+      - pattern: new MessageDigestPasswordEncoder("MD5")
+    message: "NIST PQC Migration: Spring Security using outdated MD5 encoder. Upgrade to Argon2 or BCrypt as an interim step before PQC standard adoption."
+    languages: [java]
+    severity: ERROR
+
+  # --- JAVASCRIPT / TYPESCRIPT RULES ---
+  - id: nodejs-weak-crypto
+    patterns:
+      - pattern: crypto.createHash('md5')
+      - pattern: crypto.createHash('sha1')
+    message: "NIST PQC Migration: Node.js using weak hashing. Upgrade to 'sha256' or 'sha3-256'."
+    languages: [javascript, typescript]
+    severity: WARNING

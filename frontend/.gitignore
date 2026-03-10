@@ -1,0 +1,26 @@
+# Python & Backend
+backend/venv/
+backend/__pycache__/
+*.pyc
+backend/*.sqlite3
+backend/cipher_sentinel.db
+
+# Environment Variables (CRITICAL!)
+.env
+backend/.env
+frontend/.env
+
+# Node & Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+
+# OS Files
+.DS_Store
+
+venv/
+__pycache__/
+*.pyc
+.env
+ciphersentinel.db
+ciphersentinel.log
