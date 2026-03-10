@@ -1,3 +1,6 @@
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-Vite-cyan?logo=react&logoColor=black)
+![FastAPI](https://img.shields.io/badge/FastAPI-Celery-009688?logo=fastapi&logoColor=white)
 
 # CipherSentinel 🛡️
 
@@ -148,3 +151,4 @@ Pull requests are welcome. For significant changes, open an issue first to discu
 *Built by Aditya J Shettigar.*
 
 ```
+
