@@ -118,36 +118,6 @@ function App() {
     }
   };
 
-        if (!pollResponse.ok) throw new Error(`Polling failed: ${pollResponse.status}`);
-
-        const pollData = await pollResponse.json();
-        console.log("4. Polling Result received:", pollData);
-
-        if (!pollData) {
-          console.warn("Backend returned null, waiting for next cycle...");
-          continue; 
-        }
-
-        const currentStatus = pollData.status || pollData.task_status || pollData.state;
-        
-        if (currentStatus === 'SUCCESS' || currentStatus === 'COMPLETED') {
-          console.log("5. TASK COMPLETE! Setting Dashboard Data...");
-          const finalResult = pollData.result || pollData.task_result || pollData;
-          setScanData(finalResult); 
-          isDone = true;
-        } else if (currentStatus === 'FAILED' || currentStatus === 'FAILURE') {
-          console.error("Task failed on backend.");
-          isDone = true;
-        }
-      }
-
-    } catch (error) {
-      console.error("Transmission Interrupted:", error);
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
   if (!isAuthReady) return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center">
       <motion.div 
@@ -200,7 +170,7 @@ function App() {
             {[
               { id: 'engine', label: 'PQC ENGINE', icon: Cpu },
               { id: 'archive', label: 'ARCHIVE', icon: Database },
-              { id: 'keys', label: 'API KEYS', icon: Key } // 👈 Added API Keys Tab
+              { id: 'keys', label: 'API KEYS', icon: Key }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -259,7 +229,6 @@ function App() {
           ))}
         </div>
 
-        {/* 👈 Updated Animation logic to support 3 distinct tabs */}
         <AnimatePresence mode="wait">
           {activeTab === 'engine' && (
             <motion.div 
