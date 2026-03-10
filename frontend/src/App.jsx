@@ -52,7 +52,7 @@ function App() {
       const token = await user.getIdToken();
 
       console.log("1. Sending payload to backend...", payload);
-      fetch('https://cipher-sentinel.onrender.com/api/v1/scan'), {
+      const response = await fetch('https://cipher-sentinel.onrender.com/api/v1/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,10 +83,40 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         console.log(`3. Polling attempt ${attempts} for Task: ${taskId}`);
-        const pollResponse = await fetch('https://cipher-sentinel.onrender.com/api/v1/scan${taskId}`, {
+        const pollResponse = await fetch(`https://cipher-sentinel.onrender.com/api/v1/scan/${taskId}`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!pollResponse.ok) throw new Error(`Polling failed: ${pollResponse.status}`);
+
+        const pollData = await pollResponse.json();
+        console.log("4. Polling Result received:", pollData);
+
+        if (!pollData) {
+          console.warn("Backend returned null, waiting for next cycle...");
+          continue; 
+        }
+
+        const currentStatus = pollData.status || pollData.task_status || pollData.state;
+        
+        if (currentStatus === 'SUCCESS' || currentStatus === 'COMPLETED') {
+          console.log("5. TASK COMPLETE! Setting Dashboard Data...");
+          const finalResult = pollData.result || pollData.task_result || pollData;
+          setScanData(finalResult); 
+          isDone = true;
+        } else if (currentStatus === 'FAILED' || currentStatus === 'FAILURE') {
+          console.error("Task failed on backend.");
+          isDone = true;
+        }
+      }
+
+    } catch (error) {
+      console.error("Transmission Interrupted:", error);
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
         if (!pollResponse.ok) throw new Error(`Polling failed: ${pollResponse.status}`);
 
