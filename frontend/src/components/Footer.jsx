@@ -26,9 +26,6 @@ const Footer = () => {
 
         {/* Center: Creator Info */}
         <div className="text-center">
-          <p className="text-sm text-slate-400">
-            Made by the Guy who got bored coz his girlfriend went to Mysore
-          </p>
           <p className="text-base font-medium text-slate-200 mt-1">
             [Aditya J Shettigar]
           </p>
